@@ -3,6 +3,7 @@ echo "Welcome to the Fully Functional CA tool"
 
 root_ca_flag=0
 intermediate_ca_flag=0
+revoke_ca_flag=0
 
 root_ca(){
 	if [ $root_ca_flag -eq 0 ]; then
@@ -40,7 +41,6 @@ intermediate_ca(){
         chmod 700 private
         touch index.txt
         echo 1000 > serial
-
         echo 1000 > /root/ca/intermediate/crlnumber
         echo "getting config from github \n"
         sudo wget https://raw.githubusercontent.com/aman143kri/Crypto_project/main/i_openssl.cnf -O /root/ca/intermediate/openssl.cnf
@@ -94,7 +94,7 @@ sign_certificate(){
         openssl req -config /root/ca/intermediate/openssl.cnf \
       -key /root/ca/intermediate/private/$domain_name.key.pem \
       -new -sha256 -out /root/ca/intermediate/csr/$domain_name.csr.pem
-
+	
         echo "Using the intermediate CA to sign the CSR \n"
         openssl ca -config /root/ca/intermediate/openssl.cnf \
       -extensions server_cert -days 375 -notext -md sha256 \
@@ -108,7 +108,7 @@ sign_certificate(){
 
 update_Certificate(){
         sudo apt-get install -y ca-certificates
-        sudo cp /root/ca/certs/ca.cert.pem /usr/local/share/ca-certificates/myCA$$domain_name.crt
+        sudo cp /root/ca/certs/ca.cert.pem /usr/local/share/ca-certificates/myCA$domain_name.crt
         sudo update-ca-certificates
         service apache2 restart
 }
@@ -120,10 +120,35 @@ check_Certificate(){
                 echo "certificate is valid \n"
         fi
 }
-x=1; 
 
-echo "Enter the domain name \n"
-read domain_name
+crl_create(){
+openssl ca -config /root/ca/intermediate/openssl.cnf \
+      -gencrl -out intermediate/crl/intermediate.crl.pem
+}
+
+revoke_certificate(){
+crl_create
+echo "Checking the contents of the crl using openssl crl tool \n"
+openssl crl -in intermediate/crl/intermediate.crl.pem -noout -text
+openssl ca -config /root/ca/intermediate/openssl.cnf \
+      -revoke /root/ca/intermediate/certs/$domain_name.cert.pem
+cat /root/ca/intermediate/index.txt | grep "R"
+crl_create
+}
+
+
+reissue_certificate(){
+        openssl ca -config /root/ca/intermediate/openssl.cnf \
+      -extensions server_cert -days 375 -notext -md sha256 \
+      -in /root/ca/intermediate/csr/$domain_name.csr.pem \
+      -out /root/ca/intermediate/certs/$domain_name.cert.pem
+}
+
+
+x=1; 
+y=1
+
+
 
 while [ $x -ge 0 ]
 do 
@@ -133,6 +158,8 @@ do
         echo $choosen_method
         if [ $choosen_method -eq 1 ]; then
                 echo "You have chose Automatic mode \n"
+                echo "Enter the domain name \n"
+		read domain_name
                 echo "This will create your root certificate, intermediate certificate and certificate for your browser"
                 root_ca
                 echo "root_ca created"
@@ -143,10 +170,53 @@ do
                 update_Certificate
                 echo "certificated updated"
         elif [ $choosen_method -eq 2 ]; then
-                echo "Manual"
+        	echo "Enter the domain name \n"
+		read domain_name
+                while [ $y -ge 0 ]
+		do 
+                echo "You have choosen manual mode"
+                echo "Press 1 for generating root ca certificate \n"
+                echo "Press 2 for generating intermediate certificate \n"
+                echo "Press 3 for signing the webserver \n"
+                echo "Press 4 for revoking the webserver \n"
+                echo "Press 5 for reissuing the webserver \n"
+                echo "Press 6 for updating the certificates locally \n"
+                echo "Press 7 for exit \n"
+                read manual_input
+                if [ $manual_input -eq 1 ]; then
+                	if [ $root_ca_flag -eq 1 ]; then
+                		echo "root ca already generated"
+                	else 
+                		echo "generating root ca"
+                		root_ca
+                	fi
+                elif [ $manual_input -eq 2 ]; then
+                	if [ $intermediate_ca_flag -eq 1 ]; then
+                		echo "intermediate ca already generated"
+                	else 
+                		echo "generating intermediate ca"
+                		intermediate_ca
+                	fi
+                elif [ $manual_input -eq 3 ]; then
+      			 echo "Enter the domain name \n"
+			 read domain_name
+			 sign_certificate          
+                elif [ $manual_input -eq 4 ]; then	
+               		revoke_certificate
+               	elif [ $manual_input -eq 5 ]; then
+               		reissue_certificate
+               	elif [ $manual_input -eq 6 ]; then
+               		update_Certificate
+ 		elif [ $manual_input -eq 7 ]; then
+ 			y=-1
+ 		else 
+ 			echo "wrong input \n"
+ 			y=-1
+ 		fi
+ 	done
         else
-                echo "wrong input"
-                x=0;
+                echo "wrong input, Exiting \n"
+                x=-1;
         fi
 done
       
