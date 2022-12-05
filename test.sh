@@ -123,13 +123,13 @@ check_Certificate(){
 
 crl_create(){
 openssl ca -config /root/ca/intermediate/openssl.cnf \
-      -gencrl -out intermediate/crl/intermediate.crl.pem
+      -gencrl -out /root/ca/intermediate/crl/intermediate.crl.pem
 }
 
 revoke_certificate(){
 crl_create
 echo "Checking the contents of the crl using openssl crl tool \n"
-openssl crl -in intermediate/crl/intermediate.crl.pem -noout -text
+openssl crl -in /root/ca/intermediate/crl/intermediate.crl.pem -noout -text
 openssl ca -config /root/ca/intermediate/openssl.cnf \
       -revoke /root/ca/intermediate/certs/$domain_name.cert.pem
 cat /root/ca/intermediate/index.txt | grep "R"
