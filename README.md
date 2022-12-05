@@ -14,5 +14,11 @@ It has 2 modes:
 
 * Automatic mode takes domain as input and runs all the functions 
 
+**Docker image that has certificate installed for aaa.com**
+
+``` bash 
+docker pull aman143kri/functional_ca
+```
+
 https://user-images.githubusercontent.com/42419157/205621331-15f7208a-a98e-49b9-b817-07349d69ed24.mp4
 
