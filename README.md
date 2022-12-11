@@ -20,5 +20,26 @@ It has 2 modes:
 docker pull aman143kri/functional_ca
 ```
 
+Manual Installation (Created for linux): 
+``` bash 
+wget https://raw.githubusercontent.com/aman143kri/Crypto_project/main/test.sh
+chmod +x test.sh 
+```
+Run the script as root: 
+``` bash
+sudo ./test.sh
+```
+
+For docker installation:
+
+
+https://user-images.githubusercontent.com/42419157/206885046-4a9741f5-62a3-4068-93ac-a801d3441497.mp4
+
+
+
+For manual installation:
+
 https://user-images.githubusercontent.com/42419157/205621331-15f7208a-a98e-49b9-b817-07349d69ed24.mp4
+
+
 
