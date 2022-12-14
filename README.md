@@ -30,6 +30,8 @@ Run the script as root:
 sudo ./test.sh
 ```
 
+**For seeing in browser you would need to add the intermediate/root ca into the browser. Tested on Firefox**
+
 For docker installation:
 
 
